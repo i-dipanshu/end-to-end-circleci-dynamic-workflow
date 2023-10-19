@@ -117,7 +117,7 @@ jobs:
       - build_image:
           dir: src-1/frontend
           path: src-1/frontend
-          image-name: $FRONTEND_IMAGE_NAME
+          image-name: $DOCKER_USERNAME/$FRONTEND_IMAGE_NAME
           image-tag: $CIRCLE_BUILD_NUM
 
   ## Builds and publishes the frontend image to DockerHub
@@ -127,10 +127,10 @@ jobs:
       - build_image:
           dir: src-1/frontend
           path: src-1/frontend
-          image-name: $FRONTEND_IMAGE_NAME
+          image-name: $DOCKER_USERNAME/$FRONTEND_IMAGE_NAME
           image-tag: $CIRCLE_BUILD_NUM
       - publish_image:
-          image-name: $FRONTEND_IMAGE_NAME
+          image-name: $DOCKER_USERNAME/$FRONTEND_IMAGE_NAME
           image-tag: $CIRCLE_BUILD_NUM
           docker-password: DOCKER_PASS # Don't use $ or {} as type is env_var_name
           docker-username: DOCKER_USERNAME # Don't use $ or {} as type is env_var_name
@@ -144,7 +144,7 @@ jobs:
       - build_image:
           dir: src-1/backend
           path: src-1/backend
-          image-name: $BACKEND_IMAGE_NAME
+          image-name: $DOCKER_USERNAME/$BACKEND_IMAGE_NAME
           image-tag: $CIRCLE_BUILD_NUM
 
   ## Builds and publishes the backend image to DockerHub
@@ -154,10 +154,10 @@ jobs:
       - build_image:
           dir: src-1/backend
           path: src-1/backend
-          image-name: $BACKEND_IMAGE_NAME
+          image-name: $DOCKER_USERNAME/$BACKEND_IMAGE_NAME
           image-tag: $CIRCLE_BUILD_NUM
       - publish_image:
-          image-name: $FRONTEND_IMAGE_NAME
+          image-name: $DOCKER_USERNAME/$FRONTEND_IMAGE_NAME
           image-tag: $CIRCLE_BUILD_NUM
           docker-password: DOCKER_PASS # Don't use $ or {} as type is env_var_name
           docker-username: DOCKER_USERNAME # Don't use $ or {} as type is env_var_name
@@ -180,7 +180,7 @@ jobs:
       - build_image:
           dir: tools/tool-1
           path: tools/tool-1
-          image-name: $TOOL_1_IMAGE_NAME
+          image-name: $DOCKER_USERNAME/$TOOL_1_IMAGE_NAME
           image-tag: $CIRCLE_BUILD_NUM
 
   ## Build and publishes tool-1 on DockerHub
@@ -190,10 +190,10 @@ jobs:
       - build_image:
           dir: tools/tool-1
           path: tools/tool-1
-          image-name: $TOOL_1_IMAGE_NAME
+          image-name: $DOCKER_USERNAME/$TOOL_1_IMAGE_NAME
           image-tag: $CIRCLE_BUILD_NUM
       - publish_image:
-          image-name: $TOOL_1_IMAGE_NAME
+          image-name: $DOCKER_USERNAME/$TOOL_1_IMAGE_NAME
           image-tag: $CIRCLE_BUILD_NUM
           docker-password: DOCKER_PASS # Don't use $ or {} as type is env_var_name
           docker-username: DOCKER_USERNAME # Don't use $ or {} as type is env_var_name
@@ -205,7 +205,7 @@ jobs:
       - build_image:
           dir: tools/tool-2
           path: tools/tool-2
-          image-name: $TOOL_2_IMAGE_NAME
+          image-name: $DOCKER_USERNAME/$TOOL_2_IMAGE_NAME
           image-tag: $CIRCLE_BUILD_NUM
 
   ## Build and publishes tool-2 on DockerHub
@@ -215,10 +215,10 @@ jobs:
       - build_image:
           dir: tools/tool-2
           path: tools/tool-2
-          image-name: $TOOL_2_IMAGE_NAME
+          image-name: $DOCKER_USERNAME/$TOOL_2_IMAGE_NAME
           image-tag: $CIRCLE_BUILD_NUM
       - publish_image:
-          image-name: $TOOL_2_IMAGE_NAME
+          image-name: $DOCKER_USERNAME/$TOOL_2_IMAGE_NAME
           image-tag: $CIRCLE_BUILD_NUM
           docker-password: DOCKER_PASS # Don't use $ or {} as type is env_var_name
           docker-username: DOCKER_USERNAME # Don't use $ or {} as type is env_var_name
@@ -230,7 +230,7 @@ jobs:
       - build_image:
           dir: tools/tool-3
           path: tools/tool-3
-          image-name: $TOOL_3_IMAGE_NAME
+          image-name: $DOCKER_USERNAME/$TOOL_3_IMAGE_NAME
           image-tag: $CIRCLE_BUILD_NUM
 
   ## Build and publishes tool-3 on DockerHub
@@ -240,10 +240,10 @@ jobs:
       - build_image:
           dir: tools/tool-3
           path: tools/tool-3
-          image-name: $TOOL_3_IMAGE_NAME
+          image-name: $DOCKER_USERNAME/$TOOL_3_IMAGE_NAME
           image-tag: $CIRCLE_BUILD_NUM
       - publish_image:
-          image-name: $TOOL_3_IMAGE_NAME
+          image-name: $DOCKER_USERNAME/$TOOL_3_IMAGE_NAME
           image-tag: $CIRCLE_BUILD_NUM
           docker-password: DOCKER_PASS # Don't use $ or {} as type is env_var_name
           docker-username: DOCKER_USERNAME # Don't use $ or {} as type is env_var_name
@@ -259,7 +259,7 @@ jobs:
           cluster-name: $CLUSTER_NAME
           aws-region: $AWS_REGION
       - deployment_image_updater:
-          image-name: $FRONTEND_IMAGE_NAME
+          image-name: $DOCKER_USERNAME/$FRONTEND_IMAGE_NAME
           image-tag: $FRONTEND_IMAGE_TAG
           container-name: $FRONTEND_CONTAINER_NAME
           deployment-name: $FRONTEND_DEPLOYMENT_NAME
@@ -272,7 +272,7 @@ jobs:
           cluster-name: $CLUSTER_NAME
           aws-region: $AWS_REGION
       - deployment_image_updater:
-          image-name: $BACKEND_IMAGE_NAME
+          image-name: $DOCKER_USERNAME/$BACKEND_IMAGE_NAME
           image-tag: $BACKEND_IMAGE_TAG
           container-name: $BACKEND_CONTAINER_NAME
           deployment-name: $BACKEND_DEPLOYMENT_NAME
@@ -293,13 +293,13 @@ workflows:
             branches:
               only: main
       # Job to update eks container image when new image is published to DockerHub
-      - aws-eks/update-container-image:
-          cluster-name: $CLUSTER_NAME
-          namespace: $NAMESPACE
-          resource-name: $RESOURCE_NAME
-          container-image-updates: $FRONTEND_CONTAINER_NAME=$FRONTEND_IMAGE:$FRONTEND_IMAGE_TAG
-          requires:
-            - publish_frontend_image_job
+      # - aws-eks/update-container-image:
+      #     cluster-name: $CLUSTER_NAME
+      #     namespace: $NAMESPACE
+      #     resource-name: $FRONTEND_RESOURCE_NAME
+      #     container-image-updates: $FRONTEND_CONTAINER_NAME=$FRONTEND_IMAGE_NAME:$CIRCLE_BUILD_NUM
+      #     requires:
+      #       - publish_frontend_image_job
 
       # If the above job doesn't work, use the below job to update the image
       # - frontend_deployment_image_updater_job:
@@ -321,13 +321,13 @@ workflows:
             branches:
               only: main
       # Job to update eks container image when new image is published to DockerHub
-      - aws-eks/update-container-image:
-          cluster-name: $CLUSTER_NAME
-          namespace: $NAMESPACE
-          resource-name: $RESOURCE_NAME # Format should be - deployment/container-name
-          container-image-updates: $BACKEND_CONTAINER_NAME=$BACKEND_IMAGE:$BACKEND_IMAGE_TAG
-          requires:
-            - publish_backend_image_job
+      # - aws-eks/update-container-image:
+      #     cluster-name: $CLUSTER_NAME
+      #     namespace: $NAMESPACE
+      #     resource-name: $BACKEND_RESOURCE_NAME # Format should be - deployment/container-name
+      #     container-image-updates: $BACKEND_CONTAINER_NAME=$BACKEND_IMAGE:$CIRCLE_BUILD_NUM
+      #     requires:
+      #       - publish_backend_image_job
 
       # If the above job doesn't work, use the below job to update the image
       # - backend_deployment_image_updater_job:
