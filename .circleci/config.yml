@@ -9,7 +9,7 @@ workflows:
   generate-config:
     jobs:
       - path-filtering/filter:
-          base-revision: main
+          base-revision: master
           config-path: .circleci/workflow.yml
           mapping: |
             src-1/backend/.* run-backend-workflow true
