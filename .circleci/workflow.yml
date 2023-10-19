@@ -157,7 +157,7 @@ jobs:
           image-name: $DOCKER_USERNAME/$BACKEND_IMAGE_NAME
           image-tag: $CIRCLE_BUILD_NUM
       - publish_image:
-          image-name: $DOCKER_USERNAME/$FRONTEND_IMAGE_NAME
+          image-name: $DOCKER_USERNAME/$BACKEND_IMAGE_NAME
           image-tag: $CIRCLE_BUILD_NUM
           docker-password: DOCKER_PASS # Don't use $ or {} as type is env_var_name
           docker-username: DOCKER_USERNAME # Don't use $ or {} as type is env_var_name
