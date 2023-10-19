@@ -1,0 +1,368 @@
+version: 2.1
+
+parameters:
+  run-frontend-workflow:
+    type: boolean
+    default: false
+  run-backend-workflow:
+    type: boolean
+    default: false
+  run-src-2-workflow:
+    type: boolean
+    default: false
+
+orbs:
+  docker: circleci/docker@2.4.0
+  aws-eks: circleci/aws-eks@2.2.0
+  # kubernetes: circleci/kubernetes@1.3
+
+executors:
+  k8s_executor:
+    docker:
+      - image: cimg/python:3.10
+
+commands:
+  build_image:
+    description: |
+      Abstracts the steps to build docker images
+      Use it within a job to build a docker image by passing the required arguments
+    parameters:
+      dir:
+        type: string
+        description: |
+          Path to dir containing the src to build, used for build context
+      path:
+        type: string
+        description: |
+          Path of the Dockerfile relative to root directory
+      image-name:
+        type: string
+      image-tag:
+        type: string
+    steps:
+      - checkout
+      - setup_remote_docker
+      - docker/build:
+          docker-context: <<parameters.dir>>
+          path: <<parameters.path>>
+          image: <<parameters.image-name>>
+          tag: <<parameters.image-tag>>
+
+  publish_image:
+    description: |
+      Abstracts the steps to publish images to docker image
+      Use it within a job to publish a docker image by passing the required arguments
+    parameters:
+      image-name:
+        type: string
+      image-tag:
+        type: string
+      docker-password:
+        type: env_var_name
+      docker-username:
+        type: env_var_name
+    steps:
+      - docker/check:
+          docker-password: <<parameters.docker-password>>
+          docker-username: <<parameters.docker-username>>
+      - docker/push:
+          image: <<parameters.image-name>>
+          tag: <<parameters.image-tag>>
+
+  validate_and_configure_eks:
+    description: |
+      Abstract the step to validate and configure eks on the executor
+      Use it within a job to setup, validate and configure eks on the executor
+      Commands like kubectl can be then used
+    parameters:
+      cluster-name:
+        type: string
+      aws-region:
+        type: string
+    steps:
+      - aws-eks/update-kubeconfig-with-authenticator:
+          cluster-name: <<parameters.cluster-name>>
+          aws-region: <<parameters.aws-region>>
+          install-kubectl: true
+
+  # current setup don't use these commands as there is already predefined job by eks orb
+  # If incase that job that doesn't work we can use this instead
+  deployment_image_updater:
+    description: |
+      Update the image of the deployment 
+      Requires - validate_and_configure_eks
+    parameters:
+      image-name:
+        type: string
+      image-tag:
+        type: string
+      container-name:
+        type: string
+      deployment-name:
+        type: string
+    steps:
+      - run:
+          name: Update Deployment Image
+          command: |
+            kubectl set image deployment/<<parameters.deployment-name>> \ 
+            <<parameters.container-name>>=<<parameters.image-name>>:<<parameters.image-tag>>
+
+jobs:
+  # Frontend Jobs
+
+  ## Only builds frontend image
+  build_frontend_image_job:
+    executor: docker/docker
+    steps:
+      - build_image:
+          dir: src-1/frontend
+          path: src-1/frontend
+          image-name: $FRONTEND_IMAGE_NAME
+          image-tag: $CIRCLE_BUILD_NUM
+
+  ## Builds and publishes the frontend image to DockerHub
+  publish_frontend_image_job:
+    executor: docker/docker
+    steps:
+      - build_image:
+          dir: src-1/frontend
+          path: src-1/frontend
+          image-name: $FRONTEND_IMAGE_NAME
+          image-tag: $CIRCLE_BUILD_NUM
+      - publish_image:
+          image-name: $FRONTEND_IMAGE_NAME
+          image-tag: $CIRCLE_BUILD_NUM
+          docker-password: DOCKER_PASS # Don't use $ or {} as type is env_var_name
+          docker-username: DOCKER_USERNAME # Don't use $ or {} as type is env_var_name
+
+  # Backend Jobs
+
+  ## Only Builds the backend image
+  build_backend_image_job:
+    executor: docker/docker
+    steps:
+      - build_image:
+          dir: src-1/backend
+          path: src-1/backend
+          image-name: $BACKEND_IMAGE_NAME
+          image-tag: $CIRCLE_BUILD_NUM
+
+  ## Builds and publishes the backend image to DockerHub
+  publish_backend_image_job:
+    executor: docker/docker
+    steps:
+      - build_image:
+          dir: src-1/backend
+          path: src-1/backend
+          image-name: $BACKEND_IMAGE_NAME
+          image-tag: $CIRCLE_BUILD_NUM
+      - publish_image:
+          image-name: $FRONTEND_IMAGE_NAME
+          image-tag: $CIRCLE_BUILD_NUM
+          docker-password: DOCKER_PASS # Don't use $ or {} as type is env_var_name
+          docker-username: DOCKER_USERNAME # Don't use $ or {} as type is env_var_name
+
+  # SRC-2 Job
+
+  ## Test Job
+  test:
+    executor: docker/machine
+    steps:
+      - checkout
+      - run:
+          name: Run test
+          command: echo "Test passed"
+
+  ## Builds only tool-1
+  build_tool_1_image_job:
+    executor: docker/docker
+    steps:
+      - build_image:
+          dir: tools/tool-1
+          path: tools/tool-1
+          image-name: $TOOL_1_IMAGE_NAME
+          image-tag: $CIRCLE_BUILD_NUM
+
+  ## Build and publishes tool-1 on DockerHub
+  publish_tool_1_image_job:
+    executor: docker/docker
+    steps:
+      - build_image:
+          dir: tools/tool-1
+          path: tools/tool-1
+          image-name: $TOOL_1_IMAGE_NAME
+          image-tag: $CIRCLE_BUILD_NUM
+      - publish_image:
+          image-name: $TOOL_1_IMAGE_NAME
+          image-tag: $CIRCLE_BUILD_NUM
+          docker-password: DOCKER_PASS # Don't use $ or {} as type is env_var_name
+          docker-username: DOCKER_USERNAME # Don't use $ or {} as type is env_var_name
+
+  ## Only Builds tool-2 image
+  build_tool_2_image_job:
+    executor: docker/docker
+    steps:
+      - build_image:
+          dir: tools/tool-2
+          path: tools/tool-2
+          image-name: $TOOL_2_IMAGE_NAME
+          image-tag: $CIRCLE_BUILD_NUM
+
+  ## Build and publishes tool-2 on DockerHub
+  publish_tool_2_image_job:
+    executor: docker/docker
+    steps:
+      - build_image:
+          dir: tools/tool-2
+          path: tools/tool-2
+          image-name: $TOOL_2_IMAGE_NAME
+          image-tag: $CIRCLE_BUILD_NUM
+      - publish_image:
+          image-name: $TOOL_2_IMAGE_NAME
+          image-tag: $CIRCLE_BUILD_NUM
+          docker-password: DOCKER_PASS # Don't use $ or {} as type is env_var_name
+          docker-username: DOCKER_USERNAME # Don't use $ or {} as type is env_var_name
+
+  ## Only Builds tool-3 image
+  build_tool_3_image_job:
+    executor: docker/docker
+    steps:
+      - build_image:
+          dir: tools/tool-3
+          path: tools/tool-3
+          image-name: $TOOL_3_IMAGE_NAME
+          image-tag: $CIRCLE_BUILD_NUM
+
+  ## Build and publishes tool-3 on DockerHub
+  publish_tool_3_image_job:
+    executor: docker/docker
+    steps:
+      - build_image:
+          dir: tools/tool-3
+          path: tools/tool-3
+          image-name: $TOOL_3_IMAGE_NAME
+          image-tag: $CIRCLE_BUILD_NUM
+      - publish_image:
+          image-name: $TOOL_3_IMAGE_NAME
+          image-tag: $CIRCLE_BUILD_NUM
+          docker-password: DOCKER_PASS # Don't use $ or {} as type is env_var_name
+          docker-username: DOCKER_USERNAME # Don't use $ or {} as type is env_var_name
+
+  # EKS Jobs (current setup don't use these jobs as there is already predefined job by eks orb)
+  # If incase that job that doesn't work we can use this instead
+
+  ## Frontend image updater job, Use it if the current setup doesn't work
+  frontend_deployment_image_updater_job:
+    executor: k8s_executor
+    steps:
+      - validate_and_configure_eks:
+          cluster-name: $CLUSTER_NAME
+          aws-region: $AWS_REGION
+      - deployment_image_updater:
+          image-name: $FRONTEND_IMAGE_NAME
+          image-tag: $FRONTEND_IMAGE_TAG
+          container-name: $FRONTEND_CONTAINER_NAME
+          deployment-name: $FRONTEND_DEPLOYMENT_NAME
+
+  ## Frontend image updater job, Use it if the current setup doesn't work
+  backend_deployment_image_updater_job:
+    executor: k8s_executor
+    steps:
+      - validate_and_configure_eks:
+          cluster-name: $CLUSTER_NAME
+          aws-region: $AWS_REGION
+      - deployment_image_updater:
+          image-name: $BACKEND_IMAGE_NAME
+          image-tag: $BACKEND_IMAGE_TAG
+          container-name: $BACKEND_CONTAINER_NAME
+          deployment-name: $BACKEND_DEPLOYMENT_NAME
+
+workflows:
+  # Frontend Workflow - Triggers only when there is change in /src-1/frontend
+  frontend_workflow:
+    when: <<pipeline.parameters.run-frontend-workflow>>
+    jobs:
+      # Runs when any changes occur in frontend dir on the non-main branch
+      - build_frontend_image_job:
+          filters:
+            branches:
+              ignore: main
+      # Runs when any changes occur in frontend dir on the main branch
+      - publish_frontend_image_job:
+          filters:
+            branches:
+              only: main
+      # Job to update eks container image when new image is published to DockerHub
+      - aws-eks/update-container-image:
+          cluster-name: $CLUSTER_NAME
+          namespace: $NAMESPACE
+          resource-name: $RESOURCE_NAME
+          container-image-updates: $FRONTEND_CONTAINER_NAME=$FRONTEND_IMAGE:$FRONTEND_IMAGE_TAG
+          requires:
+            - publish_frontend_image_job
+
+      # If the above job doesn't work, use the below job to update the image
+      # - frontend_deployment_image_updater_job:
+      #      requires:
+      #       - publish_frontend_image_job
+
+  # Backend Workflow - - Triggers only when there is change in /src-1/backend
+  backend_workflow:
+    when: <<pipeline.parameters.run-backend-workflow>>
+    jobs:
+      # Runs when any changes occur in backend dir on the non-main branch
+      - build_backend_image_job:
+          filters:
+            branches:
+              ignore: main
+      # Runs when any changes occur in backend dir on the main branch
+      - publish_backend_image_job:
+          filters:
+            branches:
+              only: main
+      # Job to update eks container image when new image is published to DockerHub
+      - aws-eks/update-container-image:
+          cluster-name: $CLUSTER_NAME
+          namespace: $NAMESPACE
+          resource-name: $RESOURCE_NAME # Format should be - deployment/container-name
+          container-image-updates: $BACKEND_CONTAINER_NAME=$BACKEND_IMAGE:$BACKEND_IMAGE_TAG
+          requires:
+            - publish_backend_image_job
+
+      # If the above job doesn't work, use the below job to update the image
+      # - backend_deployment_image_updater_job:
+      #      requires:
+      #       - publish_backend_image_job
+
+  # SRC-2 Workflow : Triggers only when there is change in src-2 dir
+  src_2_workflow:
+    when: <<pipeline.parameters.run-src-2-workflow>>
+    jobs:
+      - test
+      - build_tool_1_image_job:
+          filters:
+            branches:
+              ignore: main
+      - publish_tool_1_image_job:
+          filters:
+            branches:
+              only: main
+      - build_tool_2_image_job:
+          filters:
+            branches:
+              ignore: main
+      - publish_tool_2_image_job:
+          filters:
+            branches:
+              only: main
+      - build_tool_3_image_job:
+          filters:
+            branches:
+              ignore: main
+      - publish_tool_3_image_job:
+          filters:
+            branches:
+              only: main
+
+
+

@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: static-site-deployment-frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: static-site-frontend
+  template:
+    metadata:
+      labels:
+        app: static-site-frontend
+    spec:
+      containers:
+      - name: frontend
+        image: static-site-frontend:v1
+        ports:
+        - containerPort: 80
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: static-site-deployment-backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: static-site-backend
+  template:
+    metadata:
+      labels:
+        app: static-site-backend
+    spec:
+      containers:
+      - name: backend
+        image: static-site-backend:v1
+        ports:
+        - containerPort: 8080

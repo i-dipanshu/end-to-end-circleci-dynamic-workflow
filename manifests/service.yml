@@ -1,0 +1,30 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: static-site-svc-frontend
+spec:
+  selector:
+    app: static-site-frontend
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+  type: NodePort
+
+
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: static-site-svc-backend
+spec:
+  selector:
+    app: static-site-backend
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
+  type: NodePort
+
