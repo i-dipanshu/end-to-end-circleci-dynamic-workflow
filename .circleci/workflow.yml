@@ -320,7 +320,7 @@ workflows:
           filters:
             branches:
               only: main
-      Job to update eks container image when new image is published to DockerHub
+      # Job to update eks container image when new image is published to DockerHub
       - aws-eks/update-container-image:
           cluster-name: $CLUSTER_NAME
           namespace: $NAMESPACE
