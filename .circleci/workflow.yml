@@ -128,10 +128,10 @@ jobs:
           dir: src-1/frontend
           path: src-1/frontend
           image-name: $DOCKER_USERNAME/$FRONTEND_IMAGE_NAME
-          image-tag: $CIRCLE_BUILD_NUM
+          image-tag: latest
       - publish_image:
           image-name: $DOCKER_USERNAME/$FRONTEND_IMAGE_NAME
-          image-tag: $CIRCLE_BUILD_NUM
+          image-tag: latest
           docker-password: DOCKER_PASS # Don't use $ or {} as type is env_var_name
           docker-username: DOCKER_USERNAME # Don't use $ or {} as type is env_var_name
 
@@ -155,10 +155,10 @@ jobs:
           dir: src-1/backend
           path: src-1/backend
           image-name: $DOCKER_USERNAME/$BACKEND_IMAGE_NAME
-          image-tag: $CIRCLE_BUILD_NUM
+          image-tag: latest
       - publish_image:
           image-name: $DOCKER_USERNAME/$BACKEND_IMAGE_NAME
-          image-tag: $CIRCLE_BUILD_NUM
+          image-tag: latest
           docker-password: DOCKER_PASS # Don't use $ or {} as type is env_var_name
           docker-username: DOCKER_USERNAME # Don't use $ or {} as type is env_var_name
 
@@ -297,7 +297,7 @@ workflows:
           cluster-name: $CLUSTER_NAME
           namespace: $NAMESPACE
           resource-name: $FRONTEND_RESOURCE_NAME
-          container-image-updates: $FRONTEND_CONTAINER_NAME=$FRONTEND_IMAGE_NAME:$CIRCLE_BUILD_NUM
+          container-image-updates: $FRONTEND_CONTAINER_NAME=$DOCKER_USERNAME/$FRONTEND_IMAGE_NAME:latest
           requires:
             - publish_frontend_image_job
 
@@ -320,14 +320,14 @@ workflows:
           filters:
             branches:
               only: main
-      # Job to update eks container image when new image is published to DockerHub
-      # - aws-eks/update-container-image:
-      #     cluster-name: $CLUSTER_NAME
-      #     namespace: $NAMESPACE
-      #     resource-name: $BACKEND_RESOURCE_NAME # Format should be - deployment/container-name
-      #     container-image-updates: $BACKEND_CONTAINER_NAME=$BACKEND_IMAGE:$CIRCLE_BUILD_NUM
-      #     requires:
-      #       - publish_backend_image_job
+      Job to update eks container image when new image is published to DockerHub
+      - aws-eks/update-container-image:
+          cluster-name: $CLUSTER_NAME
+          namespace: $NAMESPACE
+          resource-name: $BACKEND_RESOURCE_NAME # Format should be - deployment/container-name
+          container-image-updates: $BACKEND_CONTAINER_NAME=$DOCKER_USERNAME/$BACKEND_IMAGE_NAME:latest
+          requires:
+            - publish_backend_image_job
 
       # If the above job doesn't work, use the below job to update the image
       # - backend_deployment_image_updater_job:
