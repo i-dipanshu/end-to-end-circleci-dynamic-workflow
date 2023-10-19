@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: frontend
-        image: static-site-frontend
+        image: dipanshu13/static-site-frontend:13
         ports:
         - containerPort: 80
 
@@ -36,6 +36,6 @@ spec:
     spec:
       containers:
       - name: backend
-        image: static-site-backend
+        image: dipanshu13/static-site-backend:21
         ports:
-        - containerPort: 8080
+        - containerPort: 80
