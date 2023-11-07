@@ -296,7 +296,7 @@ workflows:
       - aws-eks/update-container-image:
           cluster-name: $CLUSTER_NAME
           namespace: $NAMESPACE
-          resource-name: $FRONTEND_RESOURCE_NAME 
+          resource-name: $FRONTEND_RESOURCE_NAME
           container-image-updates: $FRONTEND_CONTAINER_NAME=$DOCKER_USERNAME/$FRONTEND_IMAGE_NAME:latest
           requires:
             - publish_frontend_image_job
@@ -313,6 +313,8 @@ workflows:
       # Runs when any changes occur in backend dir on the non-main branch
       - build_backend_image_job:
           filters:
+            tags:
+              only: /^v.*/
             branches:
               ignore: main
       # Runs when any changes occur in backend dir on the main branch
@@ -363,6 +365,3 @@ workflows:
           filters:
             branches:
               only: main
-
-
-
