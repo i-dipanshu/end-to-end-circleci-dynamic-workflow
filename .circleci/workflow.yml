@@ -314,7 +314,7 @@ workflows:
       - build_backend_image_job:
           filters:
             tags:
-              only: /^v*/
+              only: /.*/
             branches:
               ignore: main
       # Runs when any changes occur in backend dir on the main branch
