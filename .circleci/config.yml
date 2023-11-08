@@ -17,6 +17,6 @@ workflows:
             src-2/.* run-src-2-workflow true
           filters:
             tags:
-              only:
-                - /.*
-          
+              only: /.*/
+            branches:
+              only: /.*/

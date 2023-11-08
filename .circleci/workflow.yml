@@ -316,7 +316,7 @@ workflows:
             tags:
               only: /.*/
             branches:
-              ignore: /.*/
+              ignore: main
       # Runs when any changes occur in backend dir on the main branch
       - publish_backend_image_job:
           filters:
