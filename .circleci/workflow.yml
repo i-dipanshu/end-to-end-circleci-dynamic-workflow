@@ -37,7 +37,7 @@ commands:
           Path of the Dockerfile relative to root directory
       image-name:
         type: string
-      image-tag:
+      image-tags:
         type: string
     steps:
       - checkout
@@ -46,7 +46,7 @@ commands:
           docker-context: <<parameters.dir>>
           path: <<parameters.path>>
           image: <<parameters.image-name>>
-          tag: <<parameters.image-tag>>
+          tag: <<parameters.image-tags>>
 
   publish_image:
     description: |
@@ -55,7 +55,7 @@ commands:
     parameters:
       image-name:
         type: string
-      image-tag:
+      image-tags:
         type: string
       docker-password:
         type: env_var_name
@@ -67,7 +67,7 @@ commands:
           docker-username: <<parameters.docker-username>>
       - docker/push:
           image: <<parameters.image-name>>
-          tag: <<parameters.image-tag>>
+          tag: <<parameters.image-tags>>
 
   validate_and_configure_eks:
     description: |
@@ -155,10 +155,10 @@ jobs:
           dir: src-1/backend
           path: src-1/backend
           image-name: $DOCKER_USERNAME/$BACKEND_IMAGE_NAME
-          image-tag: latest
+          image-tags: latest, <<pipeline.id>>
       - publish_image:
           image-name: $DOCKER_USERNAME/$BACKEND_IMAGE_NAME
-          image-tag: latest
+          image-tags: latest
           docker-password: DOCKER_PASS # Don't use $ or {} as type is env_var_name
           docker-username: DOCKER_USERNAME # Don't use $ or {} as type is env_var_name
 
