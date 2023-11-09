@@ -316,7 +316,6 @@ workflows:
     jobs:
       # Runs when any changes occur in backend dir on the non-main branch
       - build_backend_image_job:
-          image-tags: asfdas
           filters:
             tags:
               only: /.*/
