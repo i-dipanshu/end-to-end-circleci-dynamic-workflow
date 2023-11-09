@@ -141,11 +141,19 @@ jobs:
   build_backend_image_job:
     executor: docker/docker
     steps:
+      - run:
+          name: Set Image Tags
+          command: |
+            if [ -n "$CIRCLE_TAG" ]; then
+              export IMAGE_TAGS="$CIRCLE_TAG,$CIRCLE_BUILD_NUM"
+            else
+              export IMAGE_TAGS="latest,$CIRCLE_BUILD_NUM"
+            fi
       - build_image:
           dir: src-1/backend
           path: src-1/backend
           image-name: $DOCKER_USERNAME/$BACKEND_IMAGE_NAME
-          image-tags: $CIRCLE_BUILD_NUM,\<< pipeline.git.tag || 'latest'\>>
+          image-tags: $IMAGE_TAGS
 
       - run:
           command: |
