@@ -42,23 +42,11 @@ commands:
     steps:
       - checkout
       - setup_remote_docker
-      - run:
-          name: Set Image Tags
-          command: |
-            echo "Tag is - <<pipeline.git.tag>>"
-
-            if [ -n "<<pipeline.git.tag>>" ]; then
-              export IMAGE_TAGS="$CIRCLE_TAG,$CIRCLE_BUILD_NUM"  >> "$BASH_ENV"
-            else
-              export IMAGE_TAGS="latest,$CIRCLE_BUILD_NUM"  >> "$BASH_ENV"
-            fi
-
-            echo $IMAGE_TAGS
       - docker/build:
           docker-context: <<parameters.dir>>
           path: <<parameters.path>>
           image: <<parameters.image-name>>
-          tag: $IMAGE_TAGS
+          tag: <<parameters.image-tags>>
 
   publish_image:
     description: |
@@ -151,13 +139,29 @@ jobs:
 
   ## Only Builds the backend image
   build_backend_image_job:
+    parameters:
+      image-tag-names:
+        type: env_var_name
+        default: IMAGE_TAGS
     executor: docker/docker
     steps:
+      - run:
+          name: Set Image Tags
+          command: |
+            echo "Tag is - <<pipeline.git.tag>>"
+
+            if [ -n "<<pipeline.git.tag>>" ]; then
+              echo 'export IMAGE_TAGS="$CIRCLE_TAG,$CIRCLE_BUILD_NUM"' >> "$BASH_ENV"
+            else
+               echo 'export IMAGE_TAGS="latest,$CIRCLE_BUILD_NUM"'  >> "$BASH_ENV"
+            fi
+
+            echo $IMAGE_TAGS
       - build_image:
           dir: src-1/backend
           path: src-1/backend
           image-name: $DOCKER_USERNAME/$BACKEND_IMAGE_NAME
-          image-tags: ${IMAGE_TAGS}
+          image-tags: str(<<parameters.image-tag-names>>)
 
       - run:
           command: |
