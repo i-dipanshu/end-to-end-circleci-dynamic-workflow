@@ -144,7 +144,7 @@ jobs:
       - run:
           name: Set Image Tags
           command: |
-            echo "<<pipeline.git.tag>>"
+            echo "Tag is - <<pipeline.git.tag>>"
 
             if [ -n "<<pipeline.git.tag>>" ]; then
               export IMAGE_TAGS="$CIRCLE_TAG,$CIRCLE_BUILD_NUM"
