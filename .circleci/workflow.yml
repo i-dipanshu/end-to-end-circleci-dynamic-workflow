@@ -161,7 +161,7 @@ jobs:
           dir: src-1/backend
           path: src-1/backend
           image-name: $DOCKER_USERNAME/$BACKEND_IMAGE_NAME
-          image-tags: str(<<parameters.image-tag-names>>)
+          image-tags: $IMAGE_TAGS
 
       - run:
           command: |
