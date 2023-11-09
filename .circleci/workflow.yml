@@ -147,9 +147,9 @@ jobs:
             echo "Tag is - <<pipeline.git.tag>>"
 
             if [ -n "<<pipeline.git.tag>>" ]; then
-              export IMAGE_TAGS="$CIRCLE_TAG,$CIRCLE_BUILD_NUM"
+              export IMAGE_TAGS="$CIRCLE_TAG,$CIRCLE_BUILD_NUM"  >> "$BASH_ENV"
             else
-              export IMAGE_TAGS="latest,$CIRCLE_BUILD_NUM"
+              export IMAGE_TAGS="latest,$CIRCLE_BUILD_NUM"  >> "$BASH_ENV"
             fi
 
             echo $IMAGE_TAGS
