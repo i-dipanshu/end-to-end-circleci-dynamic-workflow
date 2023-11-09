@@ -145,11 +145,8 @@ jobs:
           dir: src-1/backend
           path: src-1/backend
           image-name: $DOCKER_USERNAME/$BACKEND_IMAGE_NAME
-          when: <<pipeline.git.tag>>
-            image-tags: <<pipeline.git.tag>>,$CIRCLE_BUILD_NUM,latest
-          when: not: <<pipeline.git.tag>>
-            image-tags: $CIRCLE_BUILD_NUM,latest
-          
+          image-tags: << pipeline.git.tag or 'latest' >>,$CIRCLE_BUILD_NUM
+
       - run:
           command: |
             docker images
@@ -319,6 +316,7 @@ workflows:
     jobs:
       # Runs when any changes occur in backend dir on the non-main branch
       - build_backend_image_job:
+          image-tags: asfdas
           filters:
             tags:
               only: /.*/
