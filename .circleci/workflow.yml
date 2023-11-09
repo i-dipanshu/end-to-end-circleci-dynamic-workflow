@@ -146,6 +146,9 @@ jobs:
           path: src-1/backend
           image-name: $DOCKER_USERNAME/$BACKEND_IMAGE_NAME
           image-tags: $CIRCLE_BUILD_NUM, latest
+      - run:
+          command: |
+            docker images
 
   ## Builds and publishes the backend image to DockerHub
   publish_backend_image_job:
