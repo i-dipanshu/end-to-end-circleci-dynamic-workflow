@@ -151,11 +151,14 @@ jobs:
             else
               export IMAGE_TAGS="latest,$CIRCLE_BUILD_NUM"
             fi
+
+            echo $IMAGE_TAGS
+
       - build_image:
           dir: src-1/backend
           path: src-1/backend
           image-name: $DOCKER_USERNAME/$BACKEND_IMAGE_NAME
-          image-tags: $IMAGE_TAGS
+          image-tags: ${IMAGE_TAGS}
 
       - run:
           command: |
