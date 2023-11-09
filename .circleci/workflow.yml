@@ -144,7 +144,6 @@ jobs:
       - run:
           name: Set Image Tags
           command: |
-            echo ${<<pipeline.git.tag>>}
             echo "<<pipeline.git.tag>>"
 
             if [ -n "<<pipeline.git.tag>>" ]; then
