@@ -144,7 +144,6 @@ jobs:
       - run:
           name: Set Image Tags
           command: |
-            echo $CIRCLE_TAG
             echo ${<<pipeline.git.tag>>}
             echo "${/<<pipeline.git.tag/>>}""
             echo "<<pipeline.git.tag>>"
