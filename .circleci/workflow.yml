@@ -145,7 +145,11 @@ jobs:
           dir: src-1/backend
           path: src-1/backend
           image-name: $DOCKER_USERNAME/$BACKEND_IMAGE_NAME
-          image-tags: $CIRCLE_BUILD_NUM, latest
+          when: <<pipeline.git.tag>>
+            image-tags: <<pipeline.git.tag>>,$CIRCLE_BUILD_NUM,latest
+          when: not: <<pipeline.git.tag>>
+            image-tags: $CIRCLE_BUILD_NUM,latest
+          
       - run:
           command: |
             docker images
